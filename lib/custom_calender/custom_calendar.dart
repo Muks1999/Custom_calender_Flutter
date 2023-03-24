@@ -220,20 +220,6 @@ class _PatientCalendarState extends State<PatientCalendar> {
     }
   }
 
-  void changeMonth(Calendar calendarDate) {
-    if (DateTime(calendarDate.date.year, calendarDate.date.month).isBefore(
-        DateTime(controller.currentDateTime.year,
-            controller.currentDateTime.month))) {
-      controller.prevMonth();
-    } else {
-      controller.nextMonth();
-    }
-    controller.setMonthName();
-    if (widget.onDateChanged != null) {
-      widget.onDateChanged!(_currentDateTime);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -253,26 +239,27 @@ class _PatientCalendarState extends State<PatientCalendar> {
         Row(
           children: [
             // prev month button
-            widget.showNavigation ? _toggleBtn(false) : const SizedBox(),
+            // widget.showNavigation ? _toggleBtn(false) : const SizedBox(),
             // month and year
-            widget.hiddenMonthTitle
-                ? SizedBox()
-                : Expanded(
-                    child: Center(
-                      child: Text(
-                        controller.monthName != ''
-                            ? controller.monthName
-                            : _monthName,
-                        style: GoogleFonts.roboto(
-                            color: Colors.green,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900),
-                      ),
-                    ),
-                  ),
+            // widget.hiddenMonthTitle
+            //     ? SizedBox()
+            //     :
+            Expanded(
+              child: Center(
+                child: Text(
+                  controller.monthName != ''
+                      ? controller.monthName
+                      : _monthName,
+                  style: GoogleFonts.roboto(
+                      color: Colors.green,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900),
+                ),
+              ),
+            ),
 
             // next month button
-            widget.showNavigation ? _toggleBtn(true) : const SizedBox(),
+            // widget.showNavigation ? _toggleBtn(true) : const SizedBox(),
           ],
         ),
         SizedBox(height: 10),
@@ -280,63 +267,23 @@ class _PatientCalendarState extends State<PatientCalendar> {
       ],
     );
   }
-
-  // next / prev month buttons
-  Widget _toggleBtn(bool next) {
-    return Container(
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          color: Colors.amber),
-      child: IconButton(
-          onPressed: () {
-            if (_currentView == CalendarViews.dates) {
-              setState(() {
-                if (next) {
-                  controller.nextMonth();
-                } else {
-                  controller.prevMonth();
-                }
-                if (widget.onDateChanged != null) {
-                  widget.onDateChanged!(_currentDateTime);
-                }
-
-                _getCalendar();
-              });
-            } else if (_currentView == CalendarViews.year) {
-              if (next) {
-                midYear = (midYear == null)
-                    ? _currentDateTime.year + 9
-                    : midYear! + 9;
-              } else {
-                midYear = (midYear == null)
-                    ? _currentDateTime.year - 9
-                    : midYear! - 9;
-              }
-              setState(() {});
-            }
-          },
-          icon: Icon((next) ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-              size: 20, color: Colors.white)),
-    );
-  }
-
   // calendar
 
   Widget _calendarBody() {
-    if (_sequentialDates == null || _sequentialDates!.length < daysToDisplay)
-      return Container();
+    // if (_sequentialDates == null || _sequentialDates!.length < daysToDisplay)
+    //   return Container();
 
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       padding: EdgeInsets.zero,
       itemCount: daysToDisplay,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           mainAxisSpacing: 8, crossAxisCount: 7, crossAxisSpacing: 5),
       itemBuilder: (context, index) {
         if (index < 7) return _weekDayTitle(index);
-        if (_sequentialDates![index - 7].date == _selectedDateTime)
-          return _selector(_sequentialDates![index - 7]);
+        // if (_sequentialDates![index - 7].date == _selectedDateTime)
+        //   return _selector(_sequentialDates![index - 7]);
 
         return _calendarDates(_sequentialDates![index - 7]);
       },
@@ -346,12 +293,13 @@ class _PatientCalendarState extends State<PatientCalendar> {
   // calendar header
   Widget _weekDayTitle(int index) {
     return Container(
-      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.green),
+      decoration:
+          BoxDecoration(shape: BoxShape.rectangle, color: Colors.transparent),
       child: Center(
         child: Text(
           _weekDays[index],
           style: GoogleFonts.roboto(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -359,155 +307,15 @@ class _PatientCalendarState extends State<PatientCalendar> {
 
   // calendar element
   Widget _calendarDates(Calendar calendarDate) {
-    return calendarDate.date.month == _currentDateTime.month
-        ? InkWell(
-            hoverColor: Colors.white.withOpacity(0),
-            highlightColor: Colors.white.withOpacity(0),
-            onTap: () {
-              if (_selectedDateTime != calendarDate.date) {
-                if (calendarDate.nextMonth) {
-                  controller.nextMonth();
-                  controller.setMonthName();
-                } else if (calendarDate.prevMonth) {
-                  controller.prevMonth();
-                  controller.setMonthName();
-                }
-                setState(() => _selectedDateTime = calendarDate.date);
-              }
-
-              setState(() {
-                _selectedDateTime = calendarDate.date;
-                if (widget.onDateChanged != null) {
-                  widget.onDateChanged!(_selectedDateTime!);
-                }
-              });
-            },
-            child: calendarDate.date.day == DateTime.now().day &&
-                    calendarDate.date.month == DateTime.now().month &&
-                    calendarDate.date.year == DateTime.now().year
-                ? DateWidget(
-                    calendarDate: calendarDate,
-                    bgColor: Colors.blue,
-                  )
-                : returnDateColor(calendarDate),
-          )
-        : InkWell(
-            onTap: () {
-              changeMonth(calendarDate);
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle, color: Colors.grey[200]),
-              child: Center(
-                  child: Text(
-                '${calendarDate.date.day}',
-                style: GoogleFonts.roboto(
-                    color: Colors.green.withOpacity(0.5),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold),
-              )),
-            ),
-          );
-  }
-
-  Widget returnDateColor(Calendar calendarDate) {
-    // if (AppointmentDayWise(
-    //   date: calendarDate.date,
-    //   appointments: appointmentList,
-    // ).hasMultipleAppoints) {
-    //   return DateWidget(
-    //     calendarDate: calendarDate,
-    //     bgColor: Colors.green[900]!,
-    //   );
-    // }
-    // if (AppointmentDayWise(
-    //   date: calendarDate.date,
-    //   appointments: appointmentList,
-    // ).isAppointentMissed) {
-    //   return DateWidget(
-    //     calendarDate: calendarDate,
-    //     bgColor: Colors.red,
-    //   );
-    // }
-
-    // if (AppointmentDayWise(
-    //   date: calendarDate.date,
-    //   appointments: appointmentList,
-    // ).repeatService) {
-    //   return DateWidget(
-    //     calendarDate: calendarDate,
-    //     bgColor: Colors.orange,
-    //   );
-    // }
-
-    // if (AppointmentDayWise(
-    //   date: calendarDate.date,
-    //   appointments: appointmentList,
-    // ).otherService) {
-    //   return DateWidget(
-    //     calendarDate: calendarDate,
-    //     bgColor: Colors.green[100]!,
-    //   );
-    // }
-
-    return Container(
-      decoration:
-          BoxDecoration(shape: BoxShape.circle, color: Colors.grey[200]),
-      child: Center(
-          child: Text(
-        '${calendarDate.date.day}',
-        style: GoogleFonts.roboto(
-            color: Colors.green, fontSize: 18, fontWeight: FontWeight.bold),
-      )),
+    return InkWell(
+      child: returnDateColor(calendarDate),
     );
   }
 
-  // date selector
-  Widget _selector(Calendar calendarDate) {
-    // if (AppointmentDayWise(
-    //   date: calendarDate.date,
-    //   appointments: appointmentList,
-    // ).hasMultipleAppoints) {
-    //   return DateWidget(
-    //     calendarDate: calendarDate,
-    //     bgColor: Colors.green[900]!,
-    //   );
-    // }
-    // if (AppointmentDayWise(
-    //   date: calendarDate.date,
-    //   appointments: appointmentList,
-    // ).isAppointentMissed) {
-    //   return DateWidget(
-    //     calendarDate: calendarDate,
-    //     bgColor: Colors.red,
-    //   );
-    // }
-
-    // if (AppointmentDayWise(
-    //   date: calendarDate.date,
-    //   appointments: appointmentList,
-    // ).repeatService) {
-    //   return DateWidget(
-    //     calendarDate: calendarDate,
-    //     bgColor: Colors.orange,
-    //   );
-    // }
-
-    // if (AppointmentDayWise(
-    //   date: calendarDate.date,
-    //   appointments: appointmentList,
-    // ).otherService) {
-    //   return DateWidget(
-    //     calendarDate: calendarDate,
-    //     bgColor: Colors.green[100]!,
-    //   );
-    // }
-
+  Widget returnDateColor(Calendar calendarDate) {
     return Container(
-      decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.grey[200],
-          border: Border.all(color: Colors.blue, width: 3)),
+      decoration:
+          BoxDecoration(shape: BoxShape.rectangle, color: Colors.grey[200]),
       child: Center(
           child: Text(
         '${calendarDate.date.day}',
@@ -596,7 +404,7 @@ class DateWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
+        shape: BoxShape.rectangle,
         color: bgColor,
       ),
       child: Center(
